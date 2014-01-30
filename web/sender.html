@@ -1,0 +1,74 @@
+<html data-cast-api-enabled="true">
+<head>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  var cast_api, cv_activity;
+
+  var applicationID = '5b4d82b5-b1b4-4d3a-af54-bc4b5a3e7bab';
+
+  if (window.cast && window.cast.isAvailable) {
+    // Already initialized
+    initializeCastApi();
+  } else {
+    // Wait for API to post a message to us
+    window.addEventListener("message", function(event) {
+      if (event.source == window && event.data && event.data.source == "CastApi" && event.data.event == "Hello"){
+        initializeCastApi();
+      }
+    });
+  };
+
+  initializeCastApi = function() {
+    castApi = new cast.Api();
+    castApi.addReceiverListener(applicationID, onReceiverList);
+  };
+
+  onReceiverList = function(list) {
+    console.log("Receivers:", list);
+
+    // If the list is non-empty, show a widget with
+    // the friendly names of receivers.
+    // When a receiver is picked, invoke doLaunch with the receiver.
+    if(list.length > 0) {
+      var div = document.createElement("div");
+      div.innerText = list[0].name;
+      div.addEventListener("click", function() {
+        doLaunch(list[0]);
+      });
+      document.body.appendChild(div);
+    } else {
+      var div = document.createElement("div");
+      div.innerText = "None found...";
+      div.addEventListener("click", function() {
+        alert("nothing");
+      });
+      document.body.appendChild(div);
+    }
+  };
+
+  doLaunch = function(receiver) {
+    var launchRequest = new cast.LaunchRequest(applicationID, receiver);
+    launchRequest.parameters = '';
+
+    castApi.launch(launchRequest, function(status) {
+      if (status.status == 'running') {
+        console.log("It worked!");
+      } else {
+        console.log('Launch failed: ' + status.errorString);
+      }
+    });
+
+  };
+
+  var socket = io.connect('http://' + location.host);
+  var value = 0;
+  function increment() {
+    value += 1;
+    socket.emit("update", value);
+  }
+  </script>
+</head>
+<body>
+  <button onclick="increment()">+1</button>
+</body>
+</html>

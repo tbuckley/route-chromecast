@@ -1,0 +1,67 @@
+<html>
+
+<head>
+  <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,300,700|Roboto+Condensed:400,300' rel='stylesheet' type='text/css'>
+  <style>
+    body {
+      background-color: #000;
+      color: #FFF;
+      font-family: "Roboto", Helvetica, sans-serif;
+    }
+    #time {
+      font-size: 200px;
+    }
+    #hours {
+      font-weight: 400;
+      color: #FFF;
+    }
+    #minutes {
+      font-weight: 100;
+      color: #CCC;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+
+    var receiver = new cast.receiver.Receiver(
+        '5b4d82b5-b1b4-4d3a-af54-bc4b5a3e7bab',
+        [cast.receiver.RemoteMedia.NAMESPACE],
+        "", 5);
+    receiver.start();
+    window.addEventListener('load', function() {
+      updateTime();
+    });
+
+    function updateTime() {
+      var now = new Date(),
+          hrs = now.getHours(),
+          mins = now.getMinutes();
+      if(hrs == 0) {
+        hrs = 12;
+      } else if(hrs > 12) {
+        hrs -= 12;
+      }
+      if(mins < 10) {
+        mins = "0" + mins;
+      }
+      document.getElementById("hours").innerText = hrs;
+      document.getElementById("minutes").innerText = mins;
+      setTimeout(updateTime, 1000);
+    }
+
+    var socket = io.connect('http://' + location.host);
+    socket.on('value', function (data) {
+      document.getElementById("value").innerText = data;
+    });
+
+  </script>
+</head>
+
+<body>
+  <div id="time"><span id="hours">12</span><span id="minutes">00</span></div>
+  <div id="value">VALUE</div>
+</body>
+
+</html>
